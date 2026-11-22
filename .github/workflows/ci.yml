@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Backend — install & smoke test
+        working-directory: backend
+        run: |
+          npm install --no-audit --no-fund
+          npm run smoke
+      - name: Frontend — install
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Frontend — render check (SSR all 9 routes)
+        working-directory: frontend
+        run: npm run check:render
+      - name: Frontend — build
+        working-directory: frontend
+        run: npm run build
