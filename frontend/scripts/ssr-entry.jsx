@@ -4,6 +4,7 @@ import { StaticRouter } from 'react-router-dom/server';
 import App from '../src/App.jsx';
 import { AppProvider } from '../src/context/AppContext.jsx';
 import { AuthProvider } from '../src/context/AuthContext.jsx';
+import { GateProvider } from '../src/context/GateContext.jsx';
 
 const ROUTES = [
   '/',
@@ -24,9 +25,11 @@ for (const route of ROUTES) {
     const html = renderToString(
       <AppProvider>
         <AuthProvider>
-          <StaticRouter location={route}>
-            <App />
-          </StaticRouter>
+          <GateProvider>
+            <StaticRouter location={route}>
+              <App />
+            </StaticRouter>
+          </GateProvider>
         </AuthProvider>
       </AppProvider>
     );

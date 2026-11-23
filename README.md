@@ -41,12 +41,22 @@ Frontend render check (SSR-renders all 9 routes with esbuild to catch runtime er
 cd frontend && npm run check:render
 ```
 
-## Demo account
+## Access, accounts and admin
 
-`demo@agrisense.in` / `demo1234` (or the “Use demo account” button on the login form).
+Every visit opens with an **animated logo intro**, then an **access gate**: create a free
+account, sign in, or sign in as admin.
 
-> **Not durable.** Accounts live in an in-memory Map and tokens are opaque bearer strings with
-> 24-hour expiry. Replace with a real database for any production use.
+- **Accounts** are stored in the browser's local storage (`agrisense-db`) with salted
+  SHA-256 password hashes — a lightweight built-in database that persists sign-ups across
+  visits on the hosted site. The in-memory server store (scrypt-hashed, opaque bearer
+  tokens, 24-hour expiry) still serves the API build; replace it with a real database for
+  production.
+- **Admin quick access** — sign in once from the Admin tab (or the Account page) with the
+  admin username and password, and AgriSense afterwards opens **directly, without any
+  sign-in screen**. Defaults: username `admin`, password `agrisense-admin`. Override at
+  build time with `VITE_ADMIN_USER` and `VITE_ADMIN_PASSWORD`.
+- **Log out** (topbar or Account page) clears the session; admin sign-out re-locks the site.
+- Server accounts (the local demo account below) are not durable — in-memory only.
 
 ## Layout
 
@@ -99,8 +109,9 @@ agronomist before use.**
   seasons and water levels) into static assets, and publishes the SPA at
   `https://balajitharun-cloud.github.io/Agrisense-/`. The client (`src/lib/staticApi.js`)
   serves those snapshots when no live server answers, and filters listings/announcements
-  locally, so the published site is fully browsable with `simulated` badges. Accounts, voice
-  TTS and live translation need the server build. SPA deep links work via a `404.html` copy.
+  locally, so the published site is fully browsable with `simulated` badges. Voice TTS and
+  live translation need the server build; accounts on the hosted site use the browser's
+  local database. SPA deep links work via a `404.html` copy.
 - **Docker** — multi-stage `Dockerfile`: builds the frontend, runs Express serving `dist` on 8787.
 - **Vercel** — `vercel.json` (framework `vite`, static `frontend/dist`, `/api` + `/health` to the
   function, everything else to `index.html` for SPA deep links).

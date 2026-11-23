@@ -3,11 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, Moon, Sun, LogOut, UserCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useGate } from '../context/GateContext.jsx';
 
 export default function Topbar({ onMenu }) {
   const { t, lang, setLang, theme, toggleTheme, languages } = useApp();
   const { user, logout } = useAuth();
+  const { session, signOut } = useGate();
   const navigate = useNavigate();
+  const sessionName = session ? (session.kind === 'admin' ? session.name : session.user.name) : null;
+  const sessionEmail = session ? (session.kind === 'admin' ? session.email : session.user.email) : null;
+
+  async function handleLogout() {
+    signOut();
+    try {
+      await logout();
+    } catch {
+      /* backend session absent on hosted demo */
+    }
+    navigate('/account');
+  }
 
   return (
     <header className="topbar">
@@ -37,7 +51,25 @@ export default function Topbar({ onMenu }) {
         {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         <span className="hide-sm">{theme === 'light' ? t('theme.dark') : t('theme.light')}</span>
       </button>
-      {user ? (
+      {session ? (
+        <>
+          <button
+            className="btn ghost"
+            onClick={() => navigate('/account')}
+            title={sessionEmail}
+          >
+            <UserCircle2 size={18} />
+            <span className="hide-sm mono small">{sessionName}</span>
+          </button>
+          <button
+            className="btn small"
+            onClick={handleLogout}
+          >
+            <LogOut size={14} />
+            {t('account.logout')}
+          </button>
+        </>
+      ) : user ? (
         <>
           <button
             className="btn ghost"
