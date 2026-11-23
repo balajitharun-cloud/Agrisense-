@@ -148,7 +148,8 @@ export function listDistricts(regionId) {
 export function findDistrict(regionId, districtId) {
   const state = findRegion(regionId);
   if (!state) return null;
-  return state.districts.find((d) => d.id === districtId) || null;
+  if (!districtId) return state.districts[0] || null;
+  return state.districts.find((d) => d.id === districtId) || state.districts[0] || null;
 }
 
 export function defaultDistrict(regionId) {

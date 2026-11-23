@@ -8,7 +8,7 @@
   --surface-2: #faf8f1;
   --ink: #16241b;
   --ink-2: #46554b;
-  --ink-3: #6d7a70;
+  --ink-3: #5d6b61;
   --line: #ddd7c7;
   --line-strong: #c9c2ae;
   --primary: #1f5138;
@@ -24,6 +24,9 @@
   --warn-soft: #f6ecd2;
   --alert: #a8321f;
   --alert-soft: #f5e1dd;
+  --accent-text: #8c4d0a;
+  --ok-text: #25653d;
+  --warn-text: #8a5d04;
   --shadow: 0 1px 2px rgba(22, 36, 27, 0.06), 0 8px 24px rgba(22, 36, 27, 0.05);
   --scrim: rgba(22, 36, 27, 0.4);
 }
@@ -50,6 +53,9 @@
   --warn-soft: #38301c;
   --alert: #e08a76;
   --alert-soft: #40241d;
+  --accent-text: #d99e55;
+  --ok-text: #8fd0ab;
+  --warn-text: #e2b75c;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
   --scrim: rgba(4, 8, 6, 0.6);
 }
@@ -303,7 +309,7 @@ input:focus { border-color: var(--primary); }
   font-size: var(--fs-1);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--font-mono);
   margin-bottom: var(--sp-1);
 }
@@ -391,14 +397,14 @@ input:focus { border-color: var(--primary); }
   color: var(--ink-2);
   white-space: nowrap;
 }
-.badge.live { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
-.badge.simulated { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.badge.live { color: var(--ok-text); border-color: var(--ok); background: var(--ok-soft); }
+.badge.simulated { color: var(--warn-text); border-color: var(--warn); background: var(--warn-soft); }
 .badge.mock { color: var(--ink-2); background: var(--surface-2); }
 
 .sev { font-size: var(--fs-1); font-weight: 600; padding: 2px var(--sp-2); border-radius: var(--r-1); font-family: var(--font-mono); }
 .sev.high { color: var(--alert); background: var(--alert-soft); }
-.sev.medium { color: var(--warn); background: var(--warn-soft); }
-.sev.low { color: var(--ok); background: var(--ok-soft); }
+.sev.medium { color: var(--warn-text); background: var(--warn-soft); }
+.sev.low { color: var(--ok-text); background: var(--ok-soft); }
 
 .chip {
   display: inline-flex;
@@ -444,7 +450,7 @@ table.data td {
 
 table.data tr:last-child td { border-bottom: none; }
 table.data td.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-table.data td .up { color: var(--ok); font-family: var(--font-mono); }
+table.data td .up { color: var(--ok-text); font-family: var(--font-mono); }
 table.data td .down { color: var(--alert); font-family: var(--font-mono); }
 
 /* ---------- state views ---------- */

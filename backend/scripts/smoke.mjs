@@ -137,6 +137,13 @@ await it('weather gives current + 7 day + tips', async () => {
   assert.ok(['live', 'simulated'].includes(r.body.source));
 });
 
+await it('weather defaults to region district when districtId omitted', async () => {
+  const r = await get('/api/weather?regionId=ka&lang=en');
+  assert.strictEqual(r.status, 200);
+  assert.strictEqual(r.body.forecast.length, 7);
+  assert.strictEqual(r.body.current.temperature !== undefined, true);
+});
+
 await it('satellite/soil: returns ndvi, moisture, surfaceTemp + explanation', async () => {
   const r = await get('/api/satellite/soil?regionId=ka&districtId=ka-kalaburagi&lang=en');
   assert.strictEqual(r.status, 200);
@@ -145,6 +152,12 @@ await it('satellite/soil: returns ndvi, moisture, surfaceTemp + explanation', as
   assert.ok(r.body.explanation.length === 3);
   assert.ok(r.body.explanation[0].meaning.length > 20);
   assert.ok(r.body.explanation[0].advice.length > 20);
+});
+
+await it('satellite/soil defaults to region district when districtId omitted', async () => {
+  const r = await get('/api/satellite/soil?regionId=ka&lang=en');
+  assert.strictEqual(r.status, 200);
+  assert.strictEqual(r.body.indices.ndvi !== undefined, true);
 });
 
 await it('marketplace/listings: 12+ and filterable', async () => {
