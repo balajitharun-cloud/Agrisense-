@@ -1,6 +1,8 @@
 node_modules/
 dist/
 frontend/dist/
+frontend/public/static-api/
 .check-build/
+frontend/.check-render/
 .env
 *.log
