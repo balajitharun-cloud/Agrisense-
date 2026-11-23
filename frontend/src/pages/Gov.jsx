@@ -66,11 +66,27 @@ export default function Gov() {
         {q.data && (
           <div className="grid">
             {list.map((a) => (
-              <Card key={a.id} title={a.title} right={<span className="badge">{a.level}</span>}>
+              <Card
+                key={a.id}
+                title={a.url ? (
+                  <a href={a.url} target="_blank" rel="noopener noreferrer" className="card-title-link">{a.title}</a>
+                ) : a.title}
+                right={<span className="badge">{a.level}</span>}
+              >
                 <p className="small mt-2">{a.body}</p>
                 <p className="small mono mt-2">
                   {fmtDate(a.date)} · {a.source}
                 </p>
+                {a.url && (
+                  <a
+                    className="gov-link small mono"
+                    href={a.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t('gov.openSource')} ↗
+                  </a>
+                )}
               </Card>
             ))}
           </div>

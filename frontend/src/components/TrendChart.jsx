@@ -1,5 +1,6 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useApp } from '../context/AppContext.jsx';
 
 const AXIS = { fontSize: 10, fontFamily: 'JetBrains Mono, monospace' };
 
@@ -13,6 +14,7 @@ const tooltipStyle = {
 };
 
 export default function TrendChart({ crop }) {
+  const { t } = useApp();
   const data = [
     ...crop.history.map((h) => ({ label: String(h.year), index: h.productionIndex, kind: 'past' })),
     ...crop.forecast.map((f, i) => ({
@@ -36,14 +38,14 @@ export default function TrendChart({ crop }) {
           <CartesianGrid stroke="var(--line)" strokeDasharray="2 4" vertical={false} />
           <XAxis dataKey="label" tick={AXIS} stroke="var(--line-strong)" tickLine={false} />
           <YAxis tick={AXIS} stroke="var(--line-strong)" tickLine={false} domain={['dataMin - 8', 'dataMax + 8']} />
-          <Tooltip contentStyle={tooltipStyle} formatter={(v, name) => [v, name === 'index' ? 'Index' : 'Projected']} labelStyle={{ color: 'var(--ink-2)' }} />
+          <Tooltip contentStyle={tooltipStyle} formatter={(v, name) => [v, name === 'index' ? t('zone.pastLabel') : t('zone.projected')]} labelStyle={{ color: 'var(--ink-2)' }} />
           <Area type="monotone" dataKey="index" stroke="var(--primary)" strokeWidth={2} fill="url(#trendfill)" connectNulls dot={{ r: 2.5, fill: 'var(--primary)', strokeWidth: 0 }} />
           <Area type="monotone" dataKey="projIndex" stroke="var(--accent)" strokeWidth={2} strokeDasharray="5 4" fill="none" connectNulls dot={{ r: 2.5, fill: 'var(--accent)', strokeWidth: 0 }} />
         </AreaChart>
       </ResponsiveContainer>
       <div className="trend-legend small mono">
-        <span className="legend-swatch past" /> Past (production index)
-        <span className="legend-swatch future" /> Projected
+        <span className="legend-swatch past" /> {t('zone.pastLabel')}
+        <span className="legend-swatch future" /> {t('zone.projected')}
       </div>
     </div>
   );

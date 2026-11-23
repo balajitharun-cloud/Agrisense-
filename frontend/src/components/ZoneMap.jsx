@@ -1,5 +1,6 @@
 import React from 'react';
-import { KA_ZONE_SHAPES, KA_VIEWBOX, KA_OUTLINE_NOTE } from '../lib/kaMap.js';
+import { KA_ZONE_SHAPES, KA_VIEWBOX } from '../lib/kaMap.js';
+import { useApp } from '../context/AppContext.jsx';
 
 const FILL_ORDER = [
   'var(--ok)', 'var(--accent)', 'var(--clay)', 'var(--primary)', 'var(--warn)',
@@ -7,12 +8,13 @@ const FILL_ORDER = [
 ];
 
 export default function ZoneMap({ selectedZone, onSelect, compact = false, title }) {
+  const { t } = useApp();
   return (
     <figure className="zone-map" style={compact ? { margin: 0 } : undefined}>
       <svg
         viewBox={KA_VIEWBOX}
         role="group"
-        aria-label={title || 'Karnataka agro-climatic zone map'}
+        aria-label={title || t('zone.mapTitle')}
         style={{ width: '100%', display: 'block' }}
       >
         {KA_ZONE_SHAPES.map((shape, i) => {
@@ -64,7 +66,7 @@ export default function ZoneMap({ selectedZone, onSelect, compact = false, title
           );
         })}
       </svg>
-      <figcaption className="small zone-note">{KA_OUTLINE_NOTE}</figcaption>
+      <figcaption className="small zone-note">{t('zone.mapNote')}</figcaption>
     </figure>
   );
 }

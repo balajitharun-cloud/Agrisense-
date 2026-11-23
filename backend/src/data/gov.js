@@ -8,6 +8,7 @@ export const ANNOUNCEMENTS = [
     district: null,
     category: 'scheme',
     daysAgo: 15,
+    url: 'https://pmkisan.gov.in',
     source: 'Ministry of Agriculture & Farmers Welfare'
   },
   {
@@ -19,6 +20,7 @@ export const ANNOUNCEMENTS = [
     district: null,
     category: 'advisory',
     daysAgo: 3,
+    url: 'https://raitamitra.karnataka.gov.in',
     source: 'Dept. of Agriculture, Government of Karnataka'
   },
   {
@@ -30,6 +32,7 @@ export const ANNOUNCEMENTS = [
     district: 'ka-dharwad',
     category: 'advisory',
     daysAgo: 24,
+    url: 'https://raitamitra.karnataka.gov.in',
     source: 'Joint Director of Agriculture, Dharwad'
   },
   {
@@ -41,6 +44,7 @@ export const ANNOUNCEMENTS = [
     district: null,
     category: 'scheme',
     daysAgo: 8,
+    url: 'https://soilhealth.dac.gov.in',
     source: 'Dept. of Agriculture, Government of Karnataka'
   },
   {
@@ -52,6 +56,7 @@ export const ANNOUNCEMENTS = [
     district: null,
     category: 'price',
     daysAgo: 18,
+    url: 'https://agrimahiti.karnataka.gov.in',
     source: 'CCEA / Ministry of Finance'
   },
   {
@@ -63,6 +68,7 @@ export const ANNOUNCEMENTS = [
     district: 'ka-mysuru',
     category: 'advisory',
     daysAgo: 2,
+    url: 'https://raitamitra.karnataka.gov.in',
     source: 'Cauvery Neeravari Nigam / District Administration'
   },
   {
@@ -74,6 +80,7 @@ export const ANNOUNCEMENTS = [
     district: null,
     category: 'insurance',
     daysAgo: 5,
+    url: 'https://nfsm.gov.in',
     source: 'Ministry of Agriculture (PMFBY)'
   },
   {
@@ -85,6 +92,7 @@ export const ANNOUNCEMENTS = [
     district: 'ka-belagavi',
     category: 'advisory',
     daysAgo: 0,
+    url: 'https://pmkisan.gov.in',
     source: 'Dept. of Horticulture, Belagavi'
   },
   {
@@ -96,6 +104,7 @@ export const ANNOUNCEMENTS = [
     district: null,
     category: 'finance',
     daysAgo: 12,
+    url: 'https://raitamitra.karnataka.gov.in',
     source: 'Dept. of Financial Services'
   },
   {
@@ -107,6 +116,7 @@ export const ANNOUNCEMENTS = [
     district: 'ka-chitradurga',
     category: 'advisory',
     daysAgo: 1,
+    url: 'https://agrimahiti.karnataka.gov.in',
     source: 'District Agriculture Officer, Chitradurga'
   }
 ];

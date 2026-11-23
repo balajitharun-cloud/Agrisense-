@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import { useData } from '../lib/useData.js';
 import useLivePrices from '../lib/useLivePrices.js';
+import { apiGet } from '../lib/api.js';
+import { nearestDistrict, fetchAllDistricts } from '../lib/geo.js';
 import { SourceBadge } from '../components/SourceBadge.jsx';
 import { Card, DataState, PageHead, StatTile } from '../components/StateViews.jsx';
 import ListenButton from '../components/ListenButton.jsx';
@@ -11,18 +13,49 @@ import ZoneMap from '../components/ZoneMap.jsx';
 export default function Overview() {
   const { t, fmtNum, fmtCurrency, fmtDate } = useApp();
   const navigate = useNavigate();
+  const [location, setLocation] = useState({ districtId: 'ka-mysuru', regionId: 'ka', name: 'Mysuru' });
+  const [gpsState, setGpsState] = useState('idle');
+  const [gpsMessage, setGpsMessage] = useState('');
 
   const nodes = useData('/sensors/nodes');
   const meta = useData('/meta');
+  const kaDistrictsQ = useData('/regions/ka/districts');
+  const kaDistricts = kaDistrictsQ.data ? kaDistrictsQ.data.districts : [];
   const defaultNodeId = nodes.data ? nodes.data.defaultNode : null;
 
   const sensor = useData(defaultNodeId ? `/sensors/${defaultNodeId}` : '/sensors', [defaultNodeId]);
-  const weather = useData('/weather?regionId=ka&districtId=ka-mysuru&lang=en');
-  const satellite = useData('/satellite/soil?regionId=ka&districtId=ka-mysuru&lang=en');
-  const crops = useData('/crops/recommend?regionId=ka&districtId=ka-mysuru&season=kharif&water=medium&lang=en');
+  const weather = useData(`/weather?regionId=${location.regionId}&districtId=${location.districtId}&lang=en`, [location.districtId, location.regionId]);
+  const satellite = useData(`/satellite/soil?regionId=${location.regionId}&districtId=${location.districtId}&lang=en`, [location.districtId, location.regionId]);
+  const crops = useData(`/crops/recommend?regionId=${location.regionId}&districtId=${location.districtId}&season=kharif&water=medium&lang=en`, [location.districtId, location.regionId]);
   const gov = useData('/gov/announcements');
   const prices = useData('/marketplace/prices');
   const pricesLive = useLivePrices(prices.data);
+
+  function detectGps() {
+    if (!navigator.geolocation) {
+      setGpsState('error');
+      setGpsMessage(t('gps.unavailable'));
+      return;
+    }
+    setGpsState('locating');
+    setGpsMessage(t('gps.detecting'));
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const districts = await fetchAllDistricts(apiGet);
+        const best = nearestDistrict(districts, pos.coords.latitude, pos.coords.longitude);
+        if (!best) throw new Error('no districts');
+        setLocation({ districtId: best.id, regionId: best.regionId, name: best.name });
+        setGpsState('ok');
+        setGpsMessage(`${t('gps.detected')}: ${best.name} (${best.distanceKm} km)`);
+      } catch {
+        setGpsState('error');
+        setGpsMessage(t('gps.unavailable'));
+      }
+    }, (err) => {
+      setGpsState('error');
+      setGpsMessage(err && err.code === 1 ? t('gps.denied') : t('gps.unavailable'));
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+  }
 
   const node = sensor.data && sensor.data.node;
   const reading = sensor.data && sensor.data.reading;
@@ -44,6 +77,44 @@ export default function Overview() {
         subtitle={t('overview.subtitle')}
         right={<ListenButton text={prose} />}
       />
+
+      <div className="loc-bar">
+        <div className="filters">
+          <label className="field">
+            <span className="small">{t('common.district')}</span>
+            <select
+              value={location.districtId}
+              onChange={(e) => {
+                const id = e.target.value;
+                const dd = kaDistricts.find((x) => x.id === id);
+                if (dd) setLocation({ districtId: id, regionId: 'ka', name: dd.name });
+              }}
+            >
+              {kaDistricts.length === 0 && <option value={location.districtId}>{location.name}</option>}
+              {kaDistricts.length > 0 && kaDistricts.some((x) => x.id === location.districtId) === false && (
+                <option value={location.districtId}>{location.name}</option>
+              )}
+              {kaDistricts.map((dd) => (
+                <option key={dd.id} value={dd.id}>{dd.name}</option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="btn ghost small"
+            onClick={detectGps}
+            disabled={gpsState === 'locating'}
+          >
+            {gpsState === 'locating' ? t('gps.detecting') : t('gps.use')}
+          </button>
+          {gpsMessage && (
+            <span className="small mono gps-status" role="status">
+              {gpsState === 'ok' ? <span className="live-dot" aria-hidden="true" /> : null}
+              {gpsMessage}
+            </span>
+          )}
+        </div>
+      </div>
 
       <div className="grid cols-4">
         <StatTile

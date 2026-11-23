@@ -31,11 +31,11 @@ export default function Topbar({ onMenu }) {
       <button
         className="btn ghost"
         onClick={toggleTheme}
-        aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
-        title={theme === 'light' ? 'Dark' : 'Light'}
+        aria-label={theme === 'light' ? t('theme.dark') : t('theme.light')}
+        title={theme === 'light' ? t('theme.dark') : t('theme.light')}
       >
         {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-        <span className="hide-sm">{theme === 'light' ? 'Dark' : 'Light'}</span>
+        <span className="hide-sm">{theme === 'light' ? t('theme.dark') : t('theme.light')}</span>
       </button>
       {user ? (
         <>
