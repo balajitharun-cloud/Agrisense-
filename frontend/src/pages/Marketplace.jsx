@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { useData } from '../lib/useData.js';
+import useLivePrices from '../lib/useLivePrices.js';
 import { SourceBadge } from '../components/SourceBadge.jsx';
 import { Card, DataState, PageHead } from '../components/StateViews.jsx';
 
@@ -16,6 +17,7 @@ export default function Marketplace() {
     [category, crop, q]
   );
   const pricesQ = useData('/marketplace/prices');
+  const live = useLivePrices(pricesQ.data);
 
   return (
     <div className="page">
@@ -111,7 +113,19 @@ export default function Marketplace() {
       {tab === 'prices' && (
         <DataState loading={pricesQ.loading} error={pricesQ.error}>
           {pricesQ.data && (
-            <Card right={<SourceBadge source={pricesQ.data.source} />}>
+            <Card
+              right={
+                <span className="badge-row">
+                  <span className="small mono live-note">
+                    <span className="live-dot" aria-hidden="true" /> LIVE · {t('common.updated')}{' '}
+                    {live
+                      ? live.updatedAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                      : '—'}
+                  </span>
+                  <SourceBadge source={pricesQ.data.source} />
+                </span>
+              }
+            >
               <div className="table-scroll">
                 <table className="data">
                   <thead>
@@ -126,7 +140,7 @@ export default function Marketplace() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pricesQ.data.prices.map((p) => (
+                    {(live ? live.prices : []).map((p) => (
                       <tr key={p.id}>
                         <td>{p.commodity}</td>
                         <td className="small">{p.variety}</td>

@@ -94,7 +94,6 @@ export default function Crops() {
               <ZoneMap
                 selectedZone={zone}
                 onSelect={pickZone}
-                zoneDistricts={Object.fromEntries(Object.entries(zones).map(([z, ids]) => [z, ids.length]))}
                 title={t('zone.mapTitle')}
               />
             </Card>

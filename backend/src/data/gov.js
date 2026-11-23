@@ -7,18 +7,18 @@ export const ANNOUNCEMENTS = [
     region: null,
     district: null,
     category: 'scheme',
-    date: '2025-10-02',
+    daysAgo: 15,
     source: 'Ministry of Agriculture & Farmers Welfare'
   },
   {
     id: 'g2',
-    title: 'Kharif 2025 sowing window extended for ragi in southern dry zone',
+    title: 'Rabi sowing window extended for ragi in southern dry zone',
     body: 'With residual soil moisture holding above critical levels, the sowing window for ragi has been extended by 10 days in Bengaluru Rural and Kolar. Use certified seed and compensate plant population where germination failed.',
     level: 'state',
     region: 'ka',
     district: null,
     category: 'advisory',
-    date: '2025-10-11',
+    daysAgo: 3,
     source: 'Dept. of Agriculture, Government of Karnataka'
   },
   {
@@ -29,7 +29,7 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: 'ka-dharwad',
     category: 'advisory',
-    date: '2025-09-28',
+    daysAgo: 24,
     source: 'Joint Director of Agriculture, Dharwad'
   },
   {
@@ -40,18 +40,18 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: null,
     category: 'scheme',
-    date: '2025-10-05',
+    daysAgo: 8,
     source: 'Dept. of Agriculture, Government of Karnataka'
   },
   {
     id: 'g5',
-    title: 'Minimum Support Prices for Rabi 2025-26 notified',
-    body: 'Cabinet Committee on Economic Affairs has approved MSPs for rabi crops of 2025-26. Wheat MSP is revised upward again; collect procurement-centre details from your district FCI office.',
+    title: 'Minimum Support Prices for rabi marketing season notified',
+    body: 'Cabinet Committee on Economic Affairs has approved MSPs for the coming rabi marketing season. Wheat MSP is revised upward again; collect procurement-centre details from your district FCI office.',
     level: 'central',
     region: null,
     district: null,
     category: 'price',
-    date: '2025-10-01',
+    daysAgo: 18,
     source: 'CCEA / Ministry of Finance'
   },
   {
@@ -62,7 +62,7 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: 'ka-mysuru',
     category: 'advisory',
-    date: '2025-10-12',
+    daysAgo: 2,
     source: 'Cauvery Neeravari Nigam / District Administration'
   },
   {
@@ -73,7 +73,7 @@ export const ANNOUNCEMENTS = [
     region: null,
     district: null,
     category: 'insurance',
-    date: '2025-10-09',
+    daysAgo: 5,
     source: 'Ministry of Agriculture (PMFBY)'
   },
   {
@@ -84,7 +84,7 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: 'ka-belagavi',
     category: 'advisory',
-    date: '2025-10-14',
+    daysAgo: 0,
     source: 'Dept. of Horticulture, Belagavi'
   },
   {
@@ -95,7 +95,7 @@ export const ANNOUNCEMENTS = [
     region: null,
     district: null,
     category: 'finance',
-    date: '2025-10-03',
+    daysAgo: 12,
     source: 'Dept. of Financial Services'
   },
   {
@@ -106,13 +106,23 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: 'ka-chitradurga',
     category: 'advisory',
-    date: '2025-10-13',
+    daysAgo: 1,
     source: 'District Agriculture Officer, Chitradurga'
   }
 ];
 
+const isoDaysAgo = (n) => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+};
+
+function withDates(list) {
+  return list.map((a) => ({ ...a, date: isoDaysAgo(a.daysAgo) }));
+}
+
 export function listAnnouncements({ region, category, level } = {}) {
-  let out = ANNOUNCEMENTS;
+  let out = withDates(ANNOUNCEMENTS);
   if (region && region !== 'all') out = out.filter((a) => a.region === null || a.region === region);
   if (category && category !== 'all') out = out.filter((a) => a.category === category);
   if (level && level !== 'all') out = out.filter((a) => a.level === level);

@@ -36,6 +36,7 @@ export const STRINGS = {
     'common.empty': 'Nothing to show yet.',
     'common.listen': 'Listen',
     'common.stop': 'Stop',
+    'common.updated': 'updated',
     'common.search': 'Search',
     'common.filter': 'Filter',
     'common.all': 'All',
