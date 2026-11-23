@@ -7,7 +7,7 @@ export const ANNOUNCEMENTS = [
     region: null,
     district: null,
     category: 'scheme',
-    daysAgo: 15,
+    hoursAgo: 190,
     url: 'https://pmkisan.gov.in',
     source: 'Ministry of Agriculture & Farmers Welfare'
   },
@@ -19,7 +19,7 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: null,
     category: 'advisory',
-    daysAgo: 3,
+    hoursAgo: 28,
     url: 'https://raitamitra.karnataka.gov.in',
     source: 'Dept. of Agriculture, Government of Karnataka'
   },
@@ -31,7 +31,7 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: 'ka-dharwad',
     category: 'advisory',
-    daysAgo: 24,
+    hoursAgo: 410,
     url: 'https://raitamitra.karnataka.gov.in',
     source: 'Joint Director of Agriculture, Dharwad'
   },
@@ -43,7 +43,7 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: null,
     category: 'scheme',
-    daysAgo: 8,
+    hoursAgo: 46,
     url: 'https://soilhealth.dac.gov.in',
     source: 'Dept. of Agriculture, Government of Karnataka'
   },
@@ -55,7 +55,7 @@ export const ANNOUNCEMENTS = [
     region: null,
     district: null,
     category: 'price',
-    daysAgo: 18,
+    hoursAgo: 264,
     url: 'https://agrimahiti.karnataka.gov.in',
     source: 'CCEA / Ministry of Finance'
   },
@@ -67,7 +67,7 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: 'ka-mysuru',
     category: 'advisory',
-    daysAgo: 2,
+    hoursAgo: 14,
     url: 'https://raitamitra.karnataka.gov.in',
     source: 'Cauvery Neeravari Nigam / District Administration'
   },
@@ -79,7 +79,7 @@ export const ANNOUNCEMENTS = [
     region: null,
     district: null,
     category: 'insurance',
-    daysAgo: 5,
+    hoursAgo: 77,
     url: 'https://nfsm.gov.in',
     source: 'Ministry of Agriculture (PMFBY)'
   },
@@ -91,7 +91,7 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: 'ka-belagavi',
     category: 'advisory',
-    daysAgo: 0,
+    hoursAgo: 2,
     url: 'https://pmkisan.gov.in',
     source: 'Dept. of Horticulture, Belagavi'
   },
@@ -103,7 +103,7 @@ export const ANNOUNCEMENTS = [
     region: null,
     district: null,
     category: 'finance',
-    daysAgo: 12,
+    hoursAgo: 129,
     url: 'https://raitamitra.karnataka.gov.in',
     source: 'Dept. of Financial Services'
   },
@@ -115,20 +115,20 @@ export const ANNOUNCEMENTS = [
     region: 'ka',
     district: 'ka-chitradurga',
     category: 'advisory',
-    daysAgo: 1,
+    hoursAgo: 7,
     url: 'https://agrimahiti.karnataka.gov.in',
     source: 'District Agriculture Officer, Chitradurga'
   }
 ];
 
-const isoDaysAgo = (n) => {
+const isoHoursAgo = (n) => {
   const d = new Date();
-  d.setUTCDate(d.getUTCDate() - n);
-  return d.toISOString().slice(0, 10);
+  d.setTime(d.getTime() - n * 3600000);
+  return d.toISOString();
 };
 
 function withDates(list) {
-  return list.map((a) => ({ ...a, date: isoDaysAgo(a.daysAgo) }));
+  return list.map((a) => ({ ...a, date: isoHoursAgo(a.hoursAgo) }));
 }
 
 export function listAnnouncements({ region, category, level } = {}) {

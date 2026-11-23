@@ -223,7 +223,7 @@ export default function Crops() {
                 setState({ ...state, regionId, districtId: nextDistrict });
               }}
             >
-              {(regionsQ.data ? regionsQ.data.regions : []).map((r) => (
+              {(regionsQ.data ? regionsQ.data.regions : []).filter((r) => r.id === 'ka').map((r) => (
                 <option key={r.id} value={r.id}>{r.name}</option>
               ))}
             </select>

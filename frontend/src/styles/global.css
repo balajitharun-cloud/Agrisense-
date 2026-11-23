@@ -925,3 +925,18 @@ table.data td .down { color: var(--alert); font-family: var(--font-mono); }
 @media (max-width: 720px) {
   .sat-map-grid > .sat-expl { grid-column: auto; }
 }
+.alert-row.ok { border-left-color: var(--ok); background: var(--ok-soft); }
+.proj-lead { font-family: var(--font-body); font-size: var(--fs-4); line-height: 1.55; max-width: 70ch; }
+.proj-mods { list-style: none; margin: 0; padding: 0; }
+.proj-mod { border-top: 1px solid var(--line); }
+.proj-mod:first-child { border-top: 0; }
+.proj-mod-row {
+  display: flex; gap: var(--sp-3); align-items: baseline; width: 100%;
+  padding: var(--sp-3) var(--sp-1); text-align: left; background: none;
+  border: 0; color: inherit; cursor: pointer; border-radius: var(--r-2, 8px);
+}
+.proj-mod-row:hover { background: var(--surface-2); }
+.proj-mod-num { color: var(--ink-2); min-width: 2rem; }
+.proj-mod-body { display: flex; flex-direction: column; gap: 2px; }
+.proj-mod-name { font-weight: 600; }
+.proj-mod-row:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
