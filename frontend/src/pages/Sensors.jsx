@@ -84,127 +84,129 @@ export default function Sensors() {
         </div>
       </Card>
 
-      <div className="split mt-6">
-        <Card kicker={t('sensors.nodes')}>
-          <DataState loading={nodesQ.loading} error={nodesQ.error} empty={filteredNodes.length === 0}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
-              {filteredNodes.map((n) => (
-                <button
-                  key={n.id}
-                  className={`nav-item${n.id === nodeId ? ' active' : ''}`}
-                  style={{ width: '100%', textAlign: 'left' }}
-                  onClick={() => setSelected(n.id)}
-                >
-                  <span>
-                    <div>{n.name}</div>
-                    <div className="small">{n.crop} · {n.status}</div>
-                  </span>
-                </button>
-              ))}
+      <Card
+        className="mt-6"
+        kicker={nodeId || ''}
+        title={d ? d.node.name : t('sensors.history')}
+        right={<SourceBadge source="simulated" />}
+      >
+        <DataState loading={history.loading} error={history.error} empty={h.length === 0}>
+          <div className="sensor-charts-center">
+            <label
+              className="small sensor-points"
+              style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}
+            >
+              {t('sensors.points')}
+              <select
+                value={chartPoints}
+                onChange={(e) => setChartPoints(Number(e.target.value))}
+                aria-label="History points"
+              >
+                {[12, 24, 48, 72].map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </label>
+            <div className="sensors-charts">
+              {CHARTED.map((key) => {
+                const label = (METRIC_LABELS[key] && (METRIC_LABELS[key].key ? t(METRIC_LABELS[key].key) : METRIC_LABELS[key].label)) || key;
+                const unit = METRIC_LABELS[key].unit;
+                const th = (d && d.thresholds && d.thresholds[key]) || {};
+                return (
+                  <div className="sensor-chart-block" key={key}>
+                    <div className="sensor-chart-head small">
+                      <span>{label}</span>
+                      <span className="mono">
+                        {t('sensors.min')} {th.min !== undefined ? fmtNum(th.min) : '—'} · {t('sensors.max')} {th.max !== undefined ? fmtNum(th.max) : '—'} {unit}
+                      </span>
+                    </div>
+                    <SensorChart data={h} dataKey={key} unit={unit} name={label} />
+                    <div className="sensor-range mono small">
+                      {fmtDate(h[0] ? h[0].recordedAt : null, { hour: '2-digit', minute: '2-digit' })} →{' '}
+                      {fmtDate(h[h.length - 1] ? h[h.length - 1].recordedAt : null, { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          </div>
+        </DataState>
+      </Card>
+
+      <div className="grid cols-2 mt-6">
+        <Card
+          kicker={t('sensors.readings')}
+          title={t('sensors.metric')}
+          right={<SourceBadge source="simulated" />}
+        >
+          <DataState loading={detail.loading} error={detail.error} empty={!d}>
+            {d && (
+              <div className="table-scroll">
+                <table className="data">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>{t('sensors.metric')}</th>
+                      <th>{t('sensors.min')}</th>
+                      <th>{t('sensors.max')}</th>
+                      <th>{t('sensors.unit')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(d.thresholds).map(([key, th]) => {
+                      const value = d.reading ? d.reading[key] : null;
+                      const out = value !== null && (value < th.min || value > th.max);
+                      return (
+                        <tr key={key}>
+                          <td className="mono">{key}</td>
+                          <td className="mono" style={{ color: out ? 'var(--alert)' : undefined }}>
+                            {value === null ? '—' : fmtNum(value, key === 'temperature' ? 1 : 0)}
+                          </td>
+                          <td className="mono">{fmtNum(th.min)}</td>
+                          <td className="mono">{fmtNum(th.max)}</td>
+                          <td className="mono">{th.unit}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </DataState>
         </Card>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', minWidth: 0 }}>
-          <Card
-            kicker={nodeId || ''}
-            title={d ? d.node.name : t('sensors.readings')}
-            right={<SourceBadge source="simulated" />}
-          >
-            <DataState loading={detail.loading} error={detail.error} empty={!d}>
-              {d && (
-                <div className="table-scroll">
-                  <table className="data">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>{t('sensors.metric')}</th>
-                        <th>{t('sensors.min')}</th>
-                        <th>{t('sensors.max')}</th>
-                        <th>{t('sensors.unit')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(d.thresholds).map(([key, th]) => {
-                        const value = d.reading ? d.reading[key] : null;
-                        const out = value !== null && (value < th.min || value > th.max);
-                        const label = (METRIC_LABELS[key] && (METRIC_LABELS[key].key ? t(METRIC_LABELS[key].key) : METRIC_LABELS[key].label)) || key;
-                        return (
-                          <tr key={key}>
-                            <td className="mono">{key}</td>
-                            <td className="mono" style={{ color: out ? 'var(--alert)' : undefined }}>
-                              {value === null ? '—' : fmtNum(value, key === 'temperature' ? 1 : 0)}
-                            </td>
-                            <td className="mono">{fmtNum(th.min)}</td>
-                            <td className="mono">{fmtNum(th.max)}</td>
-                            <td className="mono">{th.unit}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </DataState>
-          </Card>
-
-          <Card title={t('sensors.alerts')}>
-            <DataState loading={detail.loading} error={detail.error}>
-              {d && d.alerts.length === 0 && <p className="small">{t('sensors.noAlerts')}</p>}
-              {d && d.alerts.map((a, i) => (
-                <div className={`alert-row${a.severity === 'warn' ? ' warn' : ''}`} key={i} style={{ marginBottom: 'var(--sp-2)' }}>
-                  <span className="mono">{a.metric}: {fmtNum(a.value)} {a.unit}</span>
-                  <span>{a.message}</span>
-                </div>
-              ))}
-              {d && d.note && <p className="small mt-2">{d.note}</p>}
-            </DataState>
-          </Card>
-
-          <Card
-            title={t('sensors.history')}
-            right={
-              <label className="small" style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
-                {t('sensors.points')}
-                <select
-                  value={chartPoints}
-                  onChange={(e) => setChartPoints(Number(e.target.value))}
-                  aria-label="History points"
-                >
-                  {[12, 24, 48, 72].map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </label>
-            }
-          >
-            <DataState loading={history.loading} error={history.error} empty={h.length === 0}>
-              <div className="sensors-charts">
-                {CHARTED.map((key) => {
-                  const label = (METRIC_LABELS[key] && (METRIC_LABELS[key].key ? t(METRIC_LABELS[key].key) : METRIC_LABELS[key].label)) || key;
-                  const unit = METRIC_LABELS[key].unit;
-                  const th = (d && d.thresholds && d.thresholds[key]) || {};
-                  return (
-                    <div className="sensor-chart-block" key={key}>
-                      <div className="sensor-chart-head small">
-                        <span>{label}</span>
-                        <span className="mono">
-                          {t('sensors.min')} {th.min !== undefined ? fmtNum(th.min) : '—'} · {t('sensors.max')} {th.max !== undefined ? fmtNum(th.max) : '—'} {unit}
-                        </span>
-                      </div>
-                      <SensorChart data={h} dataKey={key} unit={unit} name={label} />
-                      <div className="sensor-range mono small">
-                        {fmtDate(h[0] ? h[0].recordedAt : null, { hour: '2-digit', minute: '2-digit' })} →{' '}
-                        {fmtDate(h[h.length - 1] ? h[h.length - 1].recordedAt : null, { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                  );
-                })}
+        <Card title={t('sensors.alerts')}>
+          <DataState loading={detail.loading} error={detail.error}>
+            {d && d.alerts.length === 0 && <p className="small">{t('sensors.noAlerts')}</p>}
+            {d && d.alerts.map((a, i) => (
+              <div className={`alert-row${a.severity === 'warn' ? ' warn' : ''}`} key={i} style={{ marginBottom: 'var(--sp-2)' }}>
+                <span className="mono">{a.metric}: {fmtNum(a.value)} {a.unit}</span>
+                <span>{a.message}</span>
               </div>
-            </DataState>
-          </Card>
-        </div>
+            ))}
+            {d && d.note && <p className="small mt-2">{d.note}</p>}
+          </DataState>
+        </Card>
       </div>
+
+      <Card kicker={t('sensors.nodes')} className="mt-6">
+        <DataState loading={nodesQ.loading} error={nodesQ.error} empty={filteredNodes.length === 0}>
+          <div className="node-row">
+            {filteredNodes.map((n) => (
+              <button
+                key={n.id}
+                className={`nav-item${n.id === nodeId ? ' active' : ''}`}
+                onClick={() => setSelected(n.id)}
+              >
+                <span>
+                  <div>{n.name}</div>
+                  <div className="small">{n.crop} · {n.status}</div>
+                </span>
+              </button>
+            ))}
+          </div>
+        </DataState>
+      </Card>
     </div>
   );
 }
