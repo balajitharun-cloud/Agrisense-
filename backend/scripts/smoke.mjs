@@ -272,6 +272,31 @@ await it('unknown /api route returns JSON 404', async () => {
   assert.ok(r.body.error);
 });
 
+await it('crops/zone-trends: lists karnataka zones when zone omitted', async () => {
+  const r = await get('/api/crops/zone-trends?regionId=ka');
+  assert.strictEqual(r.status, 200);
+  assert.ok(r.body.zones.length === 10, `got ${r.body.zones?.length} zones`);
+  assert.ok(r.body.descriptions);
+});
+
+await it('crops/zone-trends: top-10 crops with past/current/future trend data', async () => {
+  const r = await get('/api/crops/zone-trends?regionId=ka&zone=' + encodeURIComponent('Hilly Zone') + '&season=kharif&lang=en');
+  assert.strictEqual(r.status, 200);
+  assert.strictEqual(r.body.crops.length, 10);
+  const first = r.body.crops[0];
+  assert.strictEqual(first.history.length, 6);
+  assert.strictEqual(first.forecast.length, 3);
+  assert.ok(['rising', 'stable', 'watch'].includes(first.verdict));
+  assert.ok(first.verdictReason.length > 40);
+  assert.ok(first.outlook.length > 40);
+  assert.strictEqual(first.rank, 1);
+});
+
+await it('crops/zone-trends: 404 on unknown zone', async () => {
+  const r = await get('/api/crops/zone-trends?regionId=ka&zone=Nope');
+  assert.strictEqual(r.status, 404);
+});
+
 await new Promise((resolve) => server.close(resolve));
 
 console.log('');

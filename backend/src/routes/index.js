@@ -7,6 +7,7 @@ import { readingHistory, nodeDetail, listNodes, defaultNode } from '../services/
 import { getWeather } from '../services/weather.js';
 import { getSoilSatellite } from '../services/satellite.js';
 import { recommendCrops, listCrops } from '../services/crops.js';
+import { zoneCropsTrend } from '../services/trends.js';
 import { voiceStatus, synthesize } from '../services/voice.js';
 import { translate } from '../services/translate.js';
 import * as account from '../services/account.js';
@@ -61,6 +62,13 @@ export function createRouter() {
 
   router.get('/crops', (req, res) => {
     res.json({ crops: listCrops(), source: 'mock' });
+  });
+
+  router.get('/crops/zone-trends', (req, res) => {
+    const { regionId = 'ka', zone, season = 'kharif', lang = 'en' } = req.query;
+    const data = zoneCropsTrend({ regionId, zone, season, lang });
+    if (!data) return res.status(404).json({ error: 'Unknown zone for trends' });
+    res.json({ ...data, source: 'mock' });
   });
 
   router.get('/pests', (req, res) => {
