@@ -622,15 +622,18 @@ table.data td .down { color: var(--alert); font-family: var(--font-mono); }
 
 .zone-map-card .zone-map { margin: 0 auto; max-width: 300px; }
 
-.zone-hit { fill: transparent; cursor: pointer; }
-.zone-hit:focus { outline: none; }
-.zone-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.zone-hit { cursor: pointer; }
+.zone-hit [role='button'] { fill: transparent; }
+.zone-hit [role='button']:focus { outline: none; }
+.zone-hit [role='button']:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .zone-label {
-  fill: var(--ink-2);
+  fill: var(--ink);
   pointer-events: none;
   font-family: var(--font-mono);
   letter-spacing: 0.02em;
+  paint-order: stroke;
+  stroke: var(--surface);
 }
 
 .zone-note { margin-top: var(--sp-2); color: var(--ink-2); }
@@ -779,4 +782,56 @@ table.data td .down { color: var(--alert); font-family: var(--font-mono); }
   .zone-map-card .zone-map { max-width: 240px; }
 
   select, input, textarea { font-size: 16px; }
+}
+
+/* ---------- navigation drawer (mobile "More") ---------- */
+
+.drawer .sidebar {
+  display: flex;
+  flex-direction: column;
+  position: static;
+  height: auto;
+  border-right: none;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
+}
+
+.drawer .sidebar .nav-item { justify-content: flex-start; padding: var(--sp-3); }
+
+@media (max-width: 1024px) {
+  .drawer .sidebar .nav-item { justify-content: flex-start; padding: var(--sp-3); }
+  .drawer .sidebar .nav-label-span,
+  .drawer .sidebar .brand-text,
+  .drawer .sidebar .nav-group-label { display: initial; flex: 1; }
+}
+
+@media (max-width: 720px) {
+  .drawer { padding: var(--sp-4); }
+}
+
+/* ---------- live indicators ---------- */
+
+.badge-row { display: inline-flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+
+.live-note { color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ok-text);
+  display: inline-block;
+  box-shadow: 0 0 0 0 var(--ok-soft);
+  animation: live-pulse 2s ease-out infinite;
+}
+
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 var(--ok-soft); opacity: 1; }
+  70% { box-shadow: 0 0 0 6px transparent; opacity: 0.85; }
+  100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
 }

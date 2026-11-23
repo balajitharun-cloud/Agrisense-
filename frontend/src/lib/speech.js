@@ -12,7 +12,7 @@ export async function fetchVoiceStatus() {
 }
 
 export function browserSpeak(text, langCode = 'en') {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return false;
+  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   const langTag = { en: 'en-IN', hi: 'hi-IN', kn: 'kn-IN', ta: 'ta-IN', te: 'te-IN', ml: 'ml-IN', mr: 'mr-IN', bn: 'bn-IN', gu: 'gu-IN', pa: 'pa-IN' }[langCode] || 'en-IN';
@@ -22,7 +22,7 @@ export function browserSpeak(text, langCode = 'en') {
   if (match) utter.voice = match;
   utter.rate = 0.95;
   window.speechSynthesis.speak(utter);
-  return true;
+  return utter;
 }
 
 export function browserStop() {

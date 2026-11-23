@@ -41,19 +41,30 @@ export default function ListenButton({ text, className = '' }) {
       return;
     }
     setPlaying(true);
+    const finish = () => {
+      if (mounted.current) setPlaying(false);
+    };
     try {
       if (ttsConfigured) {
         stopAudio();
         audioEl = new Audio(await serverSpeak(text, lang));
-        audioEl.onended = () => setPlaying(false);
+        audioEl.onended = finish;
+        audioEl.onerror = finish;
         await audioEl.play();
         return;
       }
-      browserSpeak(text, lang);
     } catch {
-      browserSpeak(text, lang);
-    } finally {
-      if (!ttsConfigured) setPlaying(false);
+      /* fall through to the browser voice */
+    }
+    if (audioEl) {
+      stopAudio();
+    }
+    const utter = browserSpeak(text, lang);
+    if (utter) {
+      utter.onend = finish;
+      utter.onerror = finish;
+    } else {
+      finish();
     }
   };
 

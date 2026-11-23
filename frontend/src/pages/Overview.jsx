@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import { useData } from '../lib/useData.js';
+import useLivePrices from '../lib/useLivePrices.js';
 import { SourceBadge } from '../components/SourceBadge.jsx';
 import { Card, DataState, PageHead, StatTile } from '../components/StateViews.jsx';
 import ListenButton from '../components/ListenButton.jsx';
@@ -21,12 +22,13 @@ export default function Overview() {
   const crops = useData('/crops/recommend?regionId=ka&districtId=ka-mysuru&season=kharif&water=medium&lang=en');
   const gov = useData('/gov/announcements');
   const prices = useData('/marketplace/prices');
+  const pricesLive = useLivePrices(prices.data);
 
   const node = sensor.data && sensor.data.node;
   const reading = sensor.data && sensor.data.reading;
   const latestGov = gov.data && gov.data.announcements[0];
-  const movers = prices.data
-    ? [...prices.data.prices].filter((p) => p.change !== 0).slice(0, 3)
+  const movers = pricesLive
+    ? [...pricesLive.prices].filter((p) => p.change !== 0).slice(0, 3)
     : [];
   const zone = satellite.data ? satellite.data.zone : 'Southern Dry Zone';
 
@@ -179,7 +181,14 @@ export default function Overview() {
         <Card
           kicker={t('marketplace.title')}
           title={t('overview.movers')}
-          right={movers.length ? <SourceBadge source="mock" /> : null}
+          right={movers.length ? (
+            <span className="badge-row">
+              <span className="small mono live-note">
+                <span className="live-dot" aria-hidden="true" /> LIVE
+              </span>
+              <SourceBadge source="mock" />
+            </span>
+          ) : null}
         >
           <DataState loading={prices.loading} error={prices.error} empty={movers.length === 0}>
             {movers.map((p) => (

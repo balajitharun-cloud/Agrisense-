@@ -1,69 +1,65 @@
-import React, { useMemo } from 'react';
-import { KA_ZONE_SHAPES, KA_ZONE_SHORT, KA_VIEWBOX, KA_OUTLINE_NOTE } from '../lib/kaMap.js';
+import React from 'react';
+import { KA_ZONE_SHAPES, KA_VIEWBOX, KA_OUTLINE_NOTE } from '../lib/kaMap.js';
 
 const FILL_ORDER = [
-  'var(--primary)', 'var(--ok)', 'var(--accent)', 'var(--clay)', 'var(--warn)',
-  'var(--primary)', 'var(--ok)', 'var(--accent)', 'var(--clay)', 'var(--warn)'
+  'var(--ok)', 'var(--accent)', 'var(--clay)', 'var(--primary)', 'var(--warn)',
+  'var(--accent)', 'var(--ok)', 'var(--warn)', 'var(--primary)', 'var(--clay)'
 ];
 
-export default function ZoneMap({ selectedZone, onSelect, zoneDistricts = {}, compact = false, title }) {
-  const selected = useMemo(() => selectedZone || null, [selectedZone]);
-
+export default function ZoneMap({ selectedZone, onSelect, compact = false, title }) {
   return (
-    <figure className="zone-map" style={{ margin: 0 }}>
+    <figure className="zone-map" style={compact ? { margin: 0 } : undefined}>
       <svg
         viewBox={KA_VIEWBOX}
         role="group"
         aria-label={title || 'Karnataka agro-climatic zone map'}
-        style={{ width: '100%', maxHeight: compact ? 300 : 460, display: 'block' }}
+        style={{ width: '100%', display: 'block' }}
       >
-        <defs>
-          <pattern id="zone-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <line x1="0" y1="0" x2="0" y2="6" stroke="var(--line-strong)" strokeWidth="1" />
-          </pattern>
-        </defs>
         {KA_ZONE_SHAPES.map((shape, i) => {
-          const isSelected = selected === shape.zone;
-          const count = zoneDistricts[shape.zone] || 0;
+          const isSelected = selectedZone === shape.zone;
           return (
-            <g key={shape.zone}>
-              <polygon
-                points={shape.points}
-                fill={isSelected ? 'var(--primary)' : FILL_ORDER[i % FILL_ORDER.length]}
-                fillOpacity={isSelected ? 1 : 0.55}
-                stroke={isSelected ? 'var(--accent)' : 'var(--line-strong)'}
-                strokeWidth={isSelected ? 2.4 : 1.2}
-                style={{ cursor: onSelect ? 'pointer' : 'default' }}
-              />
+            <g
+              key={shape.zone}
+              onClick={onSelect ? () => onSelect(shape.zone) : undefined}
+              className={onSelect ? 'zone-hit' : undefined}
+            >
+              {shape.districts.map((d) => (
+                <polygon
+                  key={d.name}
+                  points={d.points}
+                  fill={FILL_ORDER[i % FILL_ORDER.length]}
+                  fillOpacity={isSelected ? 0.92 : 0.45}
+                  stroke={isSelected ? 'var(--accent)' : 'var(--line-strong)'}
+                  strokeWidth={isSelected ? 1.4 : 0.5}
+                  style={onSelect ? { cursor: 'pointer' } : undefined}
+                >
+                  <title>{`${d.name} — ${shape.short} Zone`}</title>
+                </polygon>
+              ))}
               {onSelect && (
                 <polygon
-                  points={shape.points}
+                  points={shape.districts[0].points}
                   fill="transparent"
                   role="button"
                   tabIndex={0}
                   aria-pressed={isSelected}
                   aria-label={shape.zone}
-                  onClick={() => onSelect(shape.zone)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(shape.zone); } }}
-                  className="zone-hit"
                 />
               )}
-              {count > 0 && (
-                <text
-                  x={shape.label[0]}
-                  y={shape.label[1]}
-                  textAnchor="middle"
-                  className="zone-label mono"
-                  fontSize={compact ? 7 : 9}
-                >
-                  {KA_ZONE_SHORT[shape.zone]}
-                </text>
-              )}
-              {count > 1 && !compact && (
-                <text x={shape.label[0]} y={shape.label[1] + 11} textAnchor="middle" className="zone-label mono" fontSize={7}>
-                  {count} districts
-                </text>
-              )}
+              <text
+                x={shape.label[0]}
+                y={shape.label[1]}
+                textAnchor="middle"
+                className="zone-label mono"
+                fontSize={compact ? 6.5 : 7.5}
+                stroke="var(--surface)"
+                strokeWidth={compact ? 2 : 2.6}
+                paintOrder="stroke"
+                style={{ fontWeight: 600 }}
+              >
+                {shape.short}
+              </text>
             </g>
           );
         })}
