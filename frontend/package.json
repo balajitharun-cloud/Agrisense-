@@ -10,7 +10,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check:render": "node scripts/check-render.mjs"
+    "check:render": "node scripts/check-render.mjs",
+    "snapshot": "node scripts/snapshot-api.mjs",
+    "build:pages": "node scripts/snapshot-api.mjs && vite build"
   },
   "dependencies": {
     "lucide-react": "^0.441.0",

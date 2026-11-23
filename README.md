@@ -94,6 +94,13 @@ agronomist before use.**
 
 ## Deployment
 
+- **GitHub Pages** — `.github/workflows/pages.yml` re-runs the real backend on an ephemeral
+  port, snapshots every `GET` endpoint the UI can reach (504 JSON files across all districts,
+  seasons and water levels) into static assets, and publishes the SPA at
+  `https://balajitharun-cloud.github.io/Agrisense-/`. The client (`src/lib/staticApi.js`)
+  serves those snapshots when no live server answers, and filters listings/announcements
+  locally, so the published site is fully browsable with `simulated` badges. Accounts, voice
+  TTS and live translation need the server build. SPA deep links work via a `404.html` copy.
 - **Docker** — multi-stage `Dockerfile`: builds the frontend, runs Express serving `dist` on 8787.
 - **Vercel** — `vercel.json` (framework `vite`, static `frontend/dist`, `/api` + `/health` to the
   function, everything else to `index.html` for SPA deep links).
