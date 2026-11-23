@@ -31,7 +31,7 @@ export default function Protection() {
       />
 
       <div className="disclaimer" role="note">
-        <AlertTriangle size={18} aria-hidden="true" style={{ flex: 'none', color: 'var(--warn)' }} />
+        <AlertTriangle size={18} aria-hidden="true" style={{ flex: 'none', color: 'var(--warn-text)' }} />
         <span>{t('protection.disclaimer')}</span>
       </div>
 
