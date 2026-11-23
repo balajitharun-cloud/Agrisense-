@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 import Topbar from './Topbar.jsx';
+import BottomNav from './BottomNav.jsx';
 
 export default function Layout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -12,6 +13,7 @@ export default function Layout() {
       <div className="main-col">
         <Topbar onMenu={() => setDrawerOpen(true)} />
         <Outlet />
+        <BottomNav onMore={() => setDrawerOpen(true)} />
       </div>
       {drawerOpen && (
         <>

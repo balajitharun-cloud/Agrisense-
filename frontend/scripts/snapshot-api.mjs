@@ -13,6 +13,12 @@ const POINTS = [12, 24, 48, 72];
 
 const CLIENT_FILTERED = new Set(['marketplace-listings', 'gov-announcements']);
 
+const safeValue = (v) =>
+  String(v)
+    .replace(/[^a-zA-Z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
 function snapshotSlug(pathname, params = {}) {
   const safePath = pathname.split('/').filter(Boolean).join('-');
   if (CLIENT_FILTERED.has(safePath)) return `${safePath}.json`;
@@ -20,7 +26,7 @@ function snapshotSlug(pathname, params = {}) {
     .filter(([, v]) => v !== '' && v !== 'all')
     .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   if (!pairs.length) return `${safePath}.json`;
-  const tail = pairs.map(([k, v]) => `${k}-${v}`).join('--');
+  const tail = pairs.map(([k, v]) => `${k}-${safeValue(v)}`).join('--');
   return `${safePath}--${tail}.json`;
 }
 
@@ -65,6 +71,14 @@ async function main() {
       for (const water of WATER) {
         add('/crops/recommend', { regionId, districtId, season, water, lang: 'en' });
       }
+    }
+  }
+
+  add('/crops/zone-trends', { regionId: 'ka', lang: 'en' });
+  const zonesData = await (await fetch(`${base}/api/crops/zone-trends?regionId=ka`)).json();
+  for (const zone of zonesData.zones || []) {
+    for (const season of SEASONS) {
+      add('/crops/zone-trends', { regionId: 'ka', zone, season, lang: 'en' });
     }
   }
 

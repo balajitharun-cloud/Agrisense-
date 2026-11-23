@@ -3,6 +3,20 @@ const STATIC_ROOT = `${BASE_URL}static-api/`;
 
 const CLIENT_FILTERED = new Set(['marketplace-listings', 'gov-announcements']);
 
+const safeValue = (v) =>
+  String(v)
+    .replace(/[^a-zA-Z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const safeDecode = (v) => {
+  try {
+    return decodeURIComponent(v);
+  } catch {
+    return v;
+  }
+};
+
 function parsePairs(rawQuery) {
   return rawQuery
     ? rawQuery.split('&').filter(Boolean).map((pair) => {
@@ -25,7 +39,7 @@ export function snapshotSlug(path) {
     .filter(([k, v]) => v !== '' && v !== 'all')
     .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   if (!pairs.length) return `${safePath}.json`;
-  const tail = pairs.map(([k, v]) => `${k}-${v}`).join('--');
+  const tail = pairs.map(([k, v]) => `${k}-${safeValue(safeDecode(v))}`).join('--');
   return `${safePath}--${tail}.json`;
 }
 

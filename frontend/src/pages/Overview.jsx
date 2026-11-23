@@ -1,12 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import { useData } from '../lib/useData.js';
 import { SourceBadge } from '../components/SourceBadge.jsx';
 import { Card, DataState, PageHead, StatTile } from '../components/StateViews.jsx';
 import ListenButton from '../components/ListenButton.jsx';
+import ZoneMap from '../components/ZoneMap.jsx';
 
 export default function Overview() {
   const { t, fmtNum, fmtCurrency, fmtDate } = useApp();
+  const navigate = useNavigate();
 
   const nodes = useData('/sensors/nodes');
   const meta = useData('/meta');
@@ -25,6 +28,7 @@ export default function Overview() {
   const movers = prices.data
     ? [...prices.data.prices].filter((p) => p.change !== 0).slice(0, 3)
     : [];
+  const zone = satellite.data ? satellite.data.zone : 'Southern Dry Zone';
 
   const prose = node && reading && weather.data
     ? `${node.name}. ${t('overview.temp')} ${fmtNum(reading.temperature, 1)} degrees. ${t('overview.humidity')} ${fmtNum(reading.humidity)} percent. ${weather.data.current.label}. ${crops.data ? `${t('overview.topCrops')}: ${crops.data.recommendations.slice(0, 3).map((c) => c.name).join(', ')}.` : ''}`
@@ -113,6 +117,24 @@ export default function Overview() {
               </div>
             )}
           </DataState>
+        </Card>
+      </div>
+
+      <div className="map-strip mt-6">
+        <Card
+          kicker={t('group.advise')}
+          title={t('zone.mapTitle')}
+          right={<button className="btn ghost small" onClick={() => navigate(`crops?zone=${encodeURIComponent(zone)}`)}>
+            {t('zone.openInCrops')}
+          </button>}
+        >
+          <div className="overview-map-row">
+            <ZoneMap compact selectedZone={zone} onSelect={(z) => navigate(`crops?zone=${encodeURIComponent(z)}`)} title={t('zone.mapTitle')} />
+            <div className="overview-map-side">
+              <div className="mono small">{zone}</div>
+              <p className="small">{t('zone.mapHint')}</p>
+            </div>
+          </div>
         </Card>
       </div>
 
