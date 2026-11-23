@@ -1103,3 +1103,16 @@ table.data td .down { color: var(--alert); font-family: var(--font-mono); }
 @media (prefers-reduced-motion: reduce) {
   .gate { animation: none; }
 }
+
+/* ---- Sensor page: centred charts, node list at bottom ---- */
+.sensor-charts-center {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+}
+.sensor-points { justify-content: flex-end; }
+.node-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.node-row .nav-item { width: auto; min-width: 220px; }

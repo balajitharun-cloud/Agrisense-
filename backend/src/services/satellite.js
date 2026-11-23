@@ -1,4 +1,126 @@
 import { findDistrict, zoneSummary } from '../data/regions.js';
+import { fetchJson } from './http.js';
+
+const SENTINEL_TOKEN_URL = 'https://services.sentinel-hub.com/auth/realms/main/protocol/openid-connect/token';
+const SENTINEL_STATS_URL = 'https://services.sentinel-hub.com/api/v1/statistics';
+
+let tokenCache = { token: null, expiresAt: 0 };
+const statsCache = new Map();
+
+async function getSentinelToken() {
+  if (tokenCache.token && Date.now() < tokenCache.expiresAt - 60000) return tokenCache.token;
+  const res = await fetchJson(
+    SENTINEL_TOKEN_URL,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: process.env.SENTINEL_HUB_CLIENT_ID,
+        client_secret: process.env.SENTINEL_HUB_CLIENT_SECRET
+      }).toString()
+    },
+    6000
+  );
+  if (!res || !res.access_token) throw new Error('sentinel-hub: no token');
+  tokenCache = {
+    token: res.access_token,
+    expiresAt: Date.now() + (res.expires_in ? res.expires_in * 1000 : 3600000)
+  };
+  return tokenCache.token;
+}
+
+const SENTINEL_EVALSCRIPT = `//VERSION=3
+function setup() {
+  return {
+    input: ["B04", "B08", "B11"],
+    output: [
+      { id: "NDVI", bands: 1, sampleType: "FLOAT32" },
+      { id: "NDMI", bands: 1, sampleType: "FLOAT32" }
+    ]
+  };
+}
+function evaluatePixel(s) {
+  let ndvi = (s.B08 - s.B04) / (s.B08 + s.B04);
+  let ndmi = (s.B08 - s.B11) / (s.B08 + s.B11);
+  return { NDVI: [ndvi], NDMI: [ndmi] };
+}`;
+
+function clamp(v, lo, hi) {
+  return Math.min(hi, Math.max(lo, v));
+}
+
+function extractMean(intervalEntry, metric) {
+  if (!intervalEntry || typeof intervalEntry !== 'object') return null;
+  let node = intervalEntry[metric];
+  if (!node) return null;
+  const stats = node.stats && typeof node.stats === 'object' ? node.stats : node;
+  if (typeof stats.mean === 'number') return stats.mean;
+  const nested = Object.values(stats).find((v) => v && typeof v === 'object' && typeof v.mean === 'number');
+  return nested ? nested.mean : null;
+}
+
+async function fetchSentinelStats(district, today) {
+  const key = `${district.id}:${today}`;
+  if (statsCache.has(key)) return statsCache.get(key);
+  const token = await getSentinelToken();
+  const half = 0.04;
+  const from = new Date(Date.parse(today) - 30 * 86400000).toISOString().slice(0, 10);
+  const input = {
+    bounds: {
+      bbox: {
+        bbox: [district.lng - half, district.lat - half, district.lng + half, district.lat + half],
+        properties: { crs: 'http://www.opengis.net/def/crs/OGC/1.0/CRS84' }
+      }
+    },
+    data: [
+      {
+        type: 'sentinel-2-l2a',
+        dataFilter: { maxCloudCoverage: 40, mosaickingOrder: 'leastCC' }
+      }
+    ]
+  };
+  const payload = {
+    input,
+    aggregation: {
+      timeRange: { from: `${from}T00:00:00Z`, to: `${today}T23:59:59Z` },
+      aggregationInterval: { of: 'P10D' },
+      aggregations: {
+        ndvi: { bands: ['NDVI'], samples: 2500 },
+        ndmi: { bands: ['NDMI'], samples: 2500 }
+      }
+    },
+    processRequest: {
+      input,
+      evalscript: SENTINEL_EVALSCRIPT,
+      output: { responses: [{ identifier: 'default', format: { type: 'application/json' } }] }
+    }
+  };
+  const res = await fetchJson(
+    SENTINEL_STATS_URL,
+    {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+        'accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    },
+    10000
+  );
+  const intervals = res && Array.isArray(res.data) ? res.data : [];
+  let ndvi = null;
+  let ndmi = null;
+  for (let i = intervals.length - 1; i >= 0 && (ndvi === null || ndmi === null); i -= 1) {
+    if (ndvi === null) ndvi = extractMean(intervals[i], 'ndvi');
+    if (ndmi === null) ndmi = extractMean(intervals[i], 'ndmi');
+  }
+  const stats = { ndvi, ndmi };
+  statsCache.set(key, stats);
+  if (statsCache.size > 200) statsCache.delete(statsCache.keys().next().value);
+  return stats;
+}
 
 function hashSeed(str) {
   let h = 2166136261;
@@ -70,7 +192,7 @@ export async function getSoilSatellite(regionId, districtId, lang = 'en') {
   if (!district) return null;
   const zone = zoneSummary(district);
   const today = new Date().toISOString().slice(0, 10);
-  const seed = hashSeed(`${district.id}:${today}}`);
+  const seed = hashSeed(`${district.id}:${today}`);
   const r1 = rand(seed % 733);
   const r2 = rand(seed % 911);
   const r3 = rand(seed % 517);
@@ -80,6 +202,25 @@ export async function getSoilSatellite(regionId, districtId, lang = 'en') {
     soilMoisture: Math.round((28 + r2 * 45)),
     surfaceTemp: Math.round(24 + r3 * 18)
   };
+
+  let live = null;
+  try {
+    if (process.env.SENTINEL_HUB_CLIENT_ID && process.env.SENTINEL_HUB_CLIENT_SECRET) {
+      live = await fetchSentinelStats(district, today);
+    }
+  } catch (err) {
+    live = null;
+  }
+
+  if (live) {
+    if (typeof live.ndvi === 'number') {
+      indices.ndvi = Math.round(clamp(live.ndvi, -0.2, 0.95) * 1000) / 1000;
+    }
+    if (typeof live.ndmi === 'number') {
+      indices.soilMoisture = Math.round(clamp(50 + live.ndmi * 60, 5, 95));
+    }
+    indices.surfaceTemp = Math.round(clamp(34 - (indices.soilMoisture - 50) * 0.14, 18, 44));
+  }
 
   const explanation = Object.keys(INDEX_EXPLAIN).map((key) => {
     const level = ADVICE[key].level(indices[key]);
@@ -99,25 +240,7 @@ export async function getSoilSatellite(regionId, districtId, lang = 'en') {
     };
   });
 
-  let source = 'simulated';
-  try {
-    if (process.env.SENTINEL_HUB_CLIENT_ID && process.env.SENTINEL_HUB_CLIENT_SECRET) {
-      const tokenRes = await fetchJson('https://services.sentinel-hub.com/auth/realms/main/protocol/openid-connect/token', {
-        method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: process.env.SENTINEL_HUB_CLIENT_ID,
-          client_secret: process.env.SENTINEL_HUB_CLIENT_SECRET
-        }).toString()
-      }, 6000);
-      if (tokenRes && tokenRes.access_token) {
-        source = 'live';
-      }
-    }
-  } catch (err) {
-    source = 'simulated';
-  }
+  const source = live ? 'live' : 'simulated';
 
   return {
     district: { id: district.id, name: district.name, lat: district.lat, lng: district.lng },
@@ -126,8 +249,8 @@ export async function getSoilSatellite(regionId, districtId, lang = 'en') {
     indices,
     explanation,
     source,
-    note: source === 'simulated'
+    note: live === null
       ? 'Seeded district-level simulation with district hand guidance. Connect Sentinel Hub credentials for live 10 m imagery.'
-      : 'Derived from Sentinel Hub statistical API for the last cloud-free pass over this district.'
+      : 'NDVI and soil moisture derived from Sentinel Hub (Sentinel-2 L2A, latest low-cloud pass over this district); surface temperature is estimated from the live moisture signal.'
   };
 }
