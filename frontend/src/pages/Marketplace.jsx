@@ -80,9 +80,9 @@ export default function Marketplace() {
                       <tr>
                         <th>#</th>
                         <th>{t('nav.marketplace')}</th>
-                        <th>category</th>
-                        <th>₹</th>
-                        <th>unit</th>
+                        <th>{t('marketplace.category')}</th>
+                        <th>{t('marketplace.price')}</th>
+                        <th>{t('sensors.unit')}</th>
                         <th>{t('marketplace.seller')}</th>
                         <th>{t('marketplace.location')}</th>
                         <th>{t('marketplace.rating')}</th>
@@ -131,9 +131,9 @@ export default function Marketplace() {
                   <thead>
                     <tr>
                       <th>{t('marketplace.commodity')}</th>
-                      <th>variety</th>
-                      <th>market</th>
-                      <th>unit</th>
+                      <th>{t('marketplace.variety')}</th>
+                      <th>{t('marketplace.market')}</th>
+                      <th>{t('sensors.unit')}</th>
                       <th>{t('marketplace.price')}</th>
                       <th>{t('marketplace.change')}</th>
                       <th>%</th>

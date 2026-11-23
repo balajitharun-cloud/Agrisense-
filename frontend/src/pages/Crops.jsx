@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 import { useData } from '../lib/useData.js';
@@ -13,6 +13,7 @@ const VERDICT_ICON = { rising: TrendingUp, stable: Minus, watch: TrendingDown };
 
 export default function Crops() {
   const { t, fmtNum } = useApp();
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [state, setState] = useState({
     regionId: 'ka',
@@ -102,6 +103,14 @@ export default function Crops() {
                 {trendsQ.data ? `${trendsQ.data.seasonWindow}` : ''}
                 {' · '}{zoneDistrictIds.length} {t('common.districts') || 'districts'}
               </div>
+              <div className="zone-side-actions">
+                <button
+                  className="btn ghost small"
+                  onClick={() => navigate(`/sensors?zone=${encodeURIComponent(zone)}`)}
+                >
+                  {t('zone.viewSensors')}
+                </button>
+              </div>
               <div className="zone-district-list">
                 {zoneDistrictIds.map((id) => (
                   <button
@@ -134,7 +143,7 @@ export default function Crops() {
                     <th>#</th>
                     <th>{t('common.crop')}</th>
                     <th className="num">{t('zone.areaShare')}</th>
-                    <th className="num">6<span>yr</span>&nbsp;Δ</th>
+                    <th className="num">{t('zone.sixYearDelta')}</th>
                     <th>{t('zone.verdict')}</th>
                   </tr>
                 </thead>

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import { useData } from '../lib/useData.js';
 import { SourceBadge } from '../components/SourceBadge.jsx';
 import { Card, DataState, PageHead } from '../components/StateViews.jsx';
-import Sparkline from '../components/Sparkline.jsx';
+import SensorChart from '../components/SensorChart.jsx';
 
 const METRIC_LABELS = {
   temperature: { key: 'overview.temp', unit: '°C' },
@@ -14,14 +15,38 @@ const METRIC_LABELS = {
   soilK: { label: 'K', unit: 'kg/ha' }
 };
 
+const CHARTED = ['temperature', 'humidity', 'soilMoisture'];
+
 export default function Sensors() {
   const { t, fmtNum, fmtDate } = useApp();
+  const [params] = useSearchParams();
+  const zoneParam = params.get('zone') || '';
   const [selected, setSelected] = useState(null);
+  const [zoneFilter, setZoneFilter] = useState(null);
   const [chartPoints, setChartPoints] = useState(24);
 
   const nodesQ = useData('/sensors/nodes');
   const nodes = nodesQ.data ? nodesQ.data.nodes : [];
-  const nodeId = selected || (nodesQ.data ? nodesQ.data.defaultNode : null);
+
+  const kaDistrictsQ = useData('/regions/ka/districts');
+  const kaDistricts = kaDistrictsQ.data ? kaDistrictsQ.data.districts : [];
+
+  const districtToZone = useMemo(
+    () => Object.fromEntries(kaDistricts.map((dd) => [dd.id, dd.zone])),
+    [kaDistricts]
+  );
+  const zoneList = useMemo(() => [...new Set(kaDistricts.map((dd) => dd.zone))], [kaDistricts]);
+
+  const effectiveZone = zoneFilter === null ? zoneParam : zoneFilter;
+  const filteredNodes = useMemo(() => {
+    if (!effectiveZone) return nodes;
+    return nodes.filter((n) => districtToZone[n.districtId] === effectiveZone);
+  }, [nodes, effectiveZone, districtToZone]);
+
+  const nodeId =
+    selected && filteredNodes.some((n) => n.id === selected)
+      ? selected
+      : (filteredNodes[0] || {}).id || (nodesQ.data ? nodesQ.data.defaultNode : null);
 
   const detail = useData(nodeId ? `/sensors/${nodeId}` : '/sensors', [nodeId]);
   const history = useData(nodeId ? `/sensors/${nodeId}/history?points=${chartPoints}` : '/sensors', [nodeId, chartPoints]);
@@ -38,11 +63,32 @@ export default function Sensors() {
         right={<SourceBadge source="simulated" />}
       />
 
-      <div className="split">
+      <Card className="loc-bar">
+        <div className="filters">
+          <label className="field">
+            <span className="small">{t('sensors.zone')}</span>
+            <select
+              value={effectiveZone}
+              onChange={(e) => {
+                setSelected(null);
+                setZoneFilter(e.target.value);
+              }}
+            >
+              <option value="">{t('sensors.allZones')}</option>
+              {zoneList.map((z) => (
+                <option key={z} value={z}>{z}</option>
+              ))}
+            </select>
+          </label>
+          {effectiveZone && <span className="badge">{effectiveZone}</span>}
+        </div>
+      </Card>
+
+      <div className="split mt-6">
         <Card kicker={t('sensors.nodes')}>
-          <DataState loading={nodesQ.loading} error={nodesQ.error}>
+          <DataState loading={nodesQ.loading} error={nodesQ.error} empty={filteredNodes.length === 0}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
-              {nodes.map((n) => (
+              {filteredNodes.map((n) => (
                 <button
                   key={n.id}
                   className={`nav-item${n.id === nodeId ? ' active' : ''}`}
@@ -72,10 +118,10 @@ export default function Sensors() {
                     <thead>
                       <tr>
                         <th>#</th>
-                        <th>{t('sensors.readings')}</th>
-                        <th>min</th>
-                        <th>max</th>
-                        <th>unit</th>
+                        <th>{t('sensors.metric')}</th>
+                        <th>{t('sensors.min')}</th>
+                        <th>{t('sensors.max')}</th>
+                        <th>{t('sensors.unit')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -119,7 +165,7 @@ export default function Sensors() {
             title={t('sensors.history')}
             right={
               <label className="small" style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
-                points
+                {t('sensors.points')}
                 <select
                   value={chartPoints}
                   onChange={(e) => setChartPoints(Number(e.target.value))}
@@ -133,27 +179,27 @@ export default function Sensors() {
             }
           >
             <DataState loading={history.loading} error={history.error} empty={h.length === 0}>
-              <div className="table-scroll">
-                <table className="data">
-                  <tbody>
-                    {[
-                      { key: 'temperature', label: t('overview.temp'), unit: '°C' },
-                      { key: 'humidity', label: t('overview.humidity'), unit: '%' },
-                      { key: 'soilMoisture', label: t('overview.soilMoisture'), unit: '%' }
-                    ].map((row) => (
-                      <tr key={row.key}>
-                        <td style={{ minWidth: 120 }}>{row.label}</td>
-                        <td style={{ minWidth: 260 }}>
-                          <Sparkline data={h} dataKey={row.key} unit={row.unit} />
-                        </td>
-                        <td className="mono small">
-                          {fmtDate(h[0] ? h[0].recordedAt : null, { hour: '2-digit', minute: '2-digit' })} →{' '}
-                          {fmtDate(h[h.length - 1] ? h[h.length - 1].recordedAt : null, { hour: '2-digit', minute: '2-digit' })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="sensors-charts">
+                {CHARTED.map((key) => {
+                  const label = (METRIC_LABELS[key] && (METRIC_LABELS[key].key ? t(METRIC_LABELS[key].key) : METRIC_LABELS[key].label)) || key;
+                  const unit = METRIC_LABELS[key].unit;
+                  const th = (d && d.thresholds && d.thresholds[key]) || {};
+                  return (
+                    <div className="sensor-chart-block" key={key}>
+                      <div className="sensor-chart-head small">
+                        <span>{label}</span>
+                        <span className="mono">
+                          {t('sensors.min')} {th.min !== undefined ? fmtNum(th.min) : '—'} · {t('sensors.max')} {th.max !== undefined ? fmtNum(th.max) : '—'} {unit}
+                        </span>
+                      </div>
+                      <SensorChart data={h} dataKey={key} unit={unit} name={label} />
+                      <div className="sensor-range mono small">
+                        {fmtDate(h[0] ? h[0].recordedAt : null, { hour: '2-digit', minute: '2-digit' })} →{' '}
+                        {fmtDate(h[h.length - 1] ? h[h.length - 1].recordedAt : null, { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </DataState>
           </Card>

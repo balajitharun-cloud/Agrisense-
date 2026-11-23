@@ -835,3 +835,93 @@ table.data td .down { color: var(--alert); font-family: var(--font-mono); }
 @media (prefers-reduced-motion: reduce) {
   .live-dot { animation: none; }
 }
+
+/* --- location bar (GPS + district + zone selectors) --- */
+.loc-bar { margin-bottom: 0; }
+.gps-status { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+
+/* --- gov source links --- */
+.card-title-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.card-title-link:hover { color: var(--primary); border-bottom-color: var(--primary); }
+.gov-link {
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+.gov-link:hover { text-decoration: underline; }
+.gov-link:focus-visible, .card-title-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* --- sensor XY charts --- */
+.sensors-charts { display: flex; flex-direction: column; gap: var(--sp-5); }
+.sensor-chart-block { min-width: 0; }
+.sensor-chart-head {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-1);
+  color: var(--ink-2);
+}
+.sensor-range { color: var(--ink-2); margin-top: var(--sp-1); }
+.sensors-chart { min-width: 0; }
+.legend-swatch.sensors-line { background: var(--alert); }
+
+/* --- segmented index toggle --- */
+.seg-row {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.seg-btn {
+  background: var(--surface);
+  border: none;
+  border-right: 1px solid var(--line);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-1);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-family: inherit;
+}
+.seg-btn:last-child { border-right: none; }
+.seg-btn:hover { color: var(--ink); }
+.seg-btn.active { background: var(--primary); color: var(--surface); }
+.seg-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* --- satellite map + legend --- */
+.sat-map-grid { align-items: start; }
+.sat-map-grid > .sat-expl {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+.soil-map { margin: 0; }
+.soil-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-2);
+  margin-top: var(--sp-3);
+}
+.soil-legend-bar {
+  flex: 1;
+  height: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+}
+
+/* --- zone side actions (view sensors) --- */
+.zone-side-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-3) 0; }
+
+@media (max-width: 720px) {
+  .sat-map-grid > .sat-expl { grid-column: auto; }
+}
