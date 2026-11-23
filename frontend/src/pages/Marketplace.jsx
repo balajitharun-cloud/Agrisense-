@@ -144,7 +144,15 @@ export default function Marketplace() {
                       <tr key={p.id}>
                         <td>{p.commodity}</td>
                         <td className="small">{p.variety}</td>
-                        <td className="small">{p.market}</td>
+                        <td className="small">
+                          {p.url ? (
+                            <a href={p.url} target="_blank" rel="noopener noreferrer" className="gov-link">
+                              {p.market} {'↗'}
+                            </a>
+                          ) : (
+                            p.market
+                          )}
+                        </td>
                         <td className="mono">{p.unit}</td>
                         <td className="mono">{fmtCurrency(p.price)}</td>
                         <td className="mono">

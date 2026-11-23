@@ -45,9 +45,21 @@ export function listListings({ category, crop, q } = {}) {
   return out;
 }
 
+const MARKET_URLS = {
+  'Hassan APMC': 'https://www.napanta.com/market-price/karnataka/hassan/hassan',
+  'Mandya APMC': 'https://www.napanta.com/market-price/karnataka/mandya/mandya',
+  'Davangere APMC': 'https://www.napanta.com/market-price/karnataka/davangere/davangere',
+  'Raichur APMC': 'https://www.napanta.com/market-price/karnataka/raichur/raichur',
+  'Chitradurga APMC': 'https://www.napanta.com/market-price/karnataka/chitradurga/chitradurga',
+  'Kolar APMC': 'https://www.napanta.com/market-price/karnataka/kolar/kolar',
+  'Kalaburagi APMC': 'https://www.napanta.com/market-price/karnataka/gulbarga',
+  'Haveri APMC': 'https://www.napanta.com/market-price/karnataka/haveri'
+};
+
 export function listPrices() {
   return COMMODITIES.map((c) => ({
     ...c,
+    url: MARKET_URLS[c.market] || null,
     change: c.price - c.prevPrice,
     changePct: Math.round(((c.price - c.prevPrice) / c.prevPrice) * 1000) / 10
   }));
