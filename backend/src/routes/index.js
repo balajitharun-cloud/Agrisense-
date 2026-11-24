@@ -10,6 +10,7 @@ import { recommendCrops, listCrops } from '../services/crops.js';
 import { zoneCropsTrend } from '../services/trends.js';
 import { voiceStatus, synthesize } from '../services/voice.js';
 import { translate } from '../services/translate.js';
+import { aiStatus, aiConfigured, identifyPest, writeAdvisory } from '../services/ai.js';
 import * as account from '../services/account.js';
 import { authenticate } from '../services/account.js';
 
@@ -31,6 +32,7 @@ export function createRouter() {
         translate: process.env.TRANSLATE_API_KEY ? 'provider' : 'dictionary',
         marketplace: process.env.MARKETPLACE_API_BASE ? 'external' : 'in-memory',
         govFeed: process.env.GOV_FEED_URL ? 'external' : 'in-memory',
+        ai: aiConfigured() ? `${aiStatus().provider} (${aiStatus().visionModel})` : 'rule-based fallback (set MISTRAL_API_KEY, OPENAI_API_KEY or GEMINI_API_KEY)',
         accounts: 'in-memory (not durable — replace with a real database for production)'
       }
     });
@@ -145,6 +147,35 @@ export function createRouter() {
 
   router.get('/voice/status', (req, res) => {
     res.json({ ...voiceStatus(), source: 'mock' });
+  });
+
+  router.get('/ai/status', (req, res) => {
+    const status = aiStatus();
+    res.json({ configured: Boolean(status.provider), ...status, source: process.env.MISTRAL_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY ? 'live' : 'mock' });
+  });
+
+  router.post('/ai/pest-identify', async (req, res, next) => {
+    try {
+      const { image, crop, lang = 'en' } = req.body || {};
+      if (!image) return res.status(400).json({ error: 'image data URL is required', source: 'mock' });
+      const result = await identifyPest({ imageDataUrl: image, crop, lang });
+      res.json({ ...result, source: 'live' });
+    } catch (err) {
+      if (err && ['ai_not_configured', 'ai_unavailable', 'ai_bad_response', 'bad_image'].includes(err.code)) {
+        return res.status(err.code === 'bad_image' ? 400 : 503).json({ error: err.message, detail: err.code, source: 'mock' });
+      }
+      next(err);
+    }
+  });
+
+  router.post('/ai/advisory', async (req, res, next) => {
+    try {
+      const { regionId = 'ka', districtId, zone, season, water, lang = 'en' } = req.body || {};
+      const data = await writeAdvisory({ regionId, districtId, zone, season, water, lang, recommendCrops });
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
   });
 
   router.post('/voice/tts', async (req, res, next) => {

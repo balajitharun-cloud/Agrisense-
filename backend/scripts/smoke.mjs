@@ -297,6 +297,34 @@ await it('crops/zone-trends: 404 on unknown zone', async () => {
   assert.strictEqual(r.status, 404);
 });
 
+await it('ai/status reports provider or mock', async () => {
+  const r = await get('/api/ai/status');
+  assert.strictEqual(r.status, 200);
+  assert.strictEqual(typeof r.body.configured, 'boolean');
+  if (!r.body.configured) assert.strictEqual(r.body.provider, null);
+  assert.ok(['live', 'mock'].includes(r.body.source));
+});
+
+await it('ai/pest-identify degrades to 503 JSON without a provider key', async () => {
+  const r = await post('/api/ai/pest-identify', { image: 'data:image/png;base64,AAAA' });
+  assert.strictEqual(r.status, 503);
+  assert.strictEqual(r.body.source, 'mock');
+  assert.strictEqual(r.body.detail, 'ai_not_configured');
+});
+
+await it('ai/advisory composes a rule-based advisory without a key', async () => {
+  const r = await post('/api/ai/advisory', { districtId: 'ka-mysuru', zone: 'Southern Dry Zone', season: 'kharif', water: 'medium', lang: 'en' });
+  assert.strictEqual(r.status, 200);
+  assert.strictEqual(r.body.source, 'simulated');
+  assert.ok(r.body.advisory.length > 60, `advisory too short: ${(r.body.advisory || '').length}`);
+});
+
+await it('ai/pest-identify rejects a non-data-url image with 400', async () => {
+  const r = await post('/api/ai/pest-identify', { image: 'not-a-data-url' });
+  assert.strictEqual(r.status, 400);
+  assert.strictEqual(r.body.detail, 'bad_image');
+});
+
 await new Promise((resolve) => server.close(resolve));
 
 console.log('');
