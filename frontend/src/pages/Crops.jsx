@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 import { useData } from '../lib/useData.js';
+import { apiPost } from '../lib/api.js';
 import { SourceBadge } from '../components/SourceBadge.jsx';
 import { Card, DataState, PageHead } from '../components/StateViews.jsx';
 import ListenButton from "../components/ListenButton.jsx";
@@ -23,6 +24,8 @@ export default function Crops() {
   });
   const [zone, setZone] = useState(params.get('zone') || 'Southern Dry Zone');
   const [selectedCrop, setSelectedCrop] = useState(null);
+  const [adv, setAdv] = useState(null);
+  const [advBusy, setAdvBusy] = useState(false);
 
   const regionsQ = useData('/regions');
   const kaDistrictsQ = useData('/regions/ka/districts');
@@ -66,6 +69,43 @@ export default function Crops() {
   const prose = trendsQ.data && crops.length
     ? `Top crops in ${zone}: ${crops.slice(0, 3).map((c) => c.name).join(', ')}. ${focus ? `${focus.name}: ${focus.verdictReason}` : ''}`
     : '';
+
+  function localAdvisory() {
+    const r = rec.data;
+    if (!r) return null;
+    const lead = r.recommendations && r.recommendations[0];
+    if (!lead) return r.summary || null;
+    const waterRation = (lead.rationale.find((x) => x.key === 'water') || {}).text;
+    const marketRation = (lead.rationale.find((x) => x.key === 'market') || {}).text;
+    const parts = [
+      r.summary,
+      waterRation ? `${waterRation}.` : '',
+      marketRation ? `${marketRation}.` : '',
+      lead.waterOk === false ? 'Water availability is tight: irrigate at dawn and mulch to hold soil moisture.' : (lead.yieldHint ? lead.yieldHint + '.' : '')
+    ].filter(Boolean);
+    return parts.join(' ').slice(0, 900);
+  }
+
+  async function writeAdvisory() {
+    if (advBusy) return;
+    setAdvBusy(true);
+    try {
+      const res = await apiPost('/ai/advisory', {
+        regionId: state.regionId,
+        districtId: state.districtId,
+        zone,
+        season: state.season,
+        water: state.water,
+        lang: 'en'
+      });
+      if (res && res.advisory) setAdv({ text: res.advisory, source: res.source });
+    } catch {
+      const text = localAdvisory();
+      if (text) setAdv({ text, source: 'simulated' });
+    } finally {
+      setAdvBusy(false);
+    }
+  }
 
   function setSeason(season) {
     setState({ ...state, season });
@@ -289,6 +329,33 @@ export default function Crops() {
           </>
         )}
       </DataState>
+
+      <div className="mt-6" />
+
+      <Card
+        kicker="AI"
+        title={t('ai.advisoryTitle')}
+        right={adv ? <SourceBadge source={adv.source} /> : null}
+      >
+        {!adv && !advBusy && (
+          <p className="small">{t('ai.advisoryEmpty')}</p>
+        )}
+        {advBusy && <p className="small mono">{t('ai.advisoryWriting')}</p>}
+        {adv && !advBusy && (
+          <>
+            <p>{adv.text}</p>
+            <p className="small mt-2" style={{ color: 'var(--ink-2)' }}>{t('ai.advisoryNote')}</p>
+            <div className="mt-2">
+              <ListenButton text={adv.text} />
+            </div>
+          </>
+        )}
+        <div className="mt-4">
+          <button className="btn small" type="button" disabled={advBusy} onClick={writeAdvisory}>
+            {t('ai.advisoryBtn')}
+          </button>
+        </div>
+      </Card>
     </div>
   );
 }
