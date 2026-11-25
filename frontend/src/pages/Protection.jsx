@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Camera } from 'lucide-react';
+import { AlertTriangle, Camera, Image as ImageIcon } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 import { useData } from '../lib/useData.js';
 import { apiPost } from '../lib/api.js';
@@ -83,7 +83,8 @@ export default function Protection() {
   const [fallback, setFallback] = useState(false);
   const [desc, setDesc] = useState('');
   const [suggestions, setSuggestions] = useState(null);
-  const fileRef = useRef(null);
+  const cameraRef = useRef(null);
+  const galleryRef = useRef(null);
 
   const pestsQ = useData('/pests?lang=en');
   const pestList = pestsQ.data ? pestsQ.data.pests : [];
@@ -187,24 +188,29 @@ export default function Protection() {
               </select>
             </label>
             <div className="field">
-              <span className="small">{imgSrc ? t('ai.retake') : t('ai.choosePhoto')}</span>
+              <span className="small">{imgSrc ? t('ai.retake') : `${t('ai.camera')} / ${t('ai.gallery')}`}</span>
               <input
-                ref={fileRef}
+                ref={cameraRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
                 onChange={onPickFile}
                 style={{ display: 'none' }}
               />
+              <input
+                ref={galleryRef}
+                type="file"
+                accept="image/*"
+                onChange={onPickFile}
+                style={{ display: 'none' }}
+              />
               <div className="ai-actions">
-                <button className="btn small" type="button" onClick={() => fileRef.current && fileRef.current.click()}>
-                  <Camera size={14} aria-hidden="true" style={{ flex: 'none' }} /> {t('ai.choosePhoto')}
+                <button className="btn small" type="button" onClick={() => cameraRef.current && cameraRef.current.click()}>
+                  <Camera size={14} aria-hidden="true" style={{ flex: 'none' }} /> {t('ai.camera')}
                 </button>
-                {imgSrc && (
-                  <button className="btn ghost small" type="button" onClick={() => { setImgSrc(null); setAiResult(null); setFallback(false); setSuggestions(null); }}>
-                    {t('ai.retake')}
-                  </button>
-                )}
+                <button className="btn ghost small" type="button" onClick={() => galleryRef.current && galleryRef.current.click()}>
+                  <ImageIcon size={14} aria-hidden="true" style={{ flex: 'none' }} /> {t('ai.gallery')}
+                </button>
               </div>
             </div>
           </div>
